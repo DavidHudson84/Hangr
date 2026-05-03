@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hangr — The operating system for modern dry cleaners</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%23083344'/%3E%3Cpath d='M12 4 C 11 4 10.5 4.7 10.5 5.5 C 10.5 6.3 11 7 12 7' stroke='%2322D3EE' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3Cpath d='M12 7 L12 8.6' stroke='%2322D3EE' stroke-width='1.8' stroke-linecap='round'/%3E%3Cpath d='M12 8.6 L3.5 14.5 L20.5 14.5 Z' stroke='%2322D3EE' stroke-width='1.8' fill='none' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  :root {
+    --bg: #0A0E1A;
+    --bg-grid: #0E1424;
+    --surface: #141925;
+    --surface-elev: #1B2030;
+    --surface-hover: #232A3A;
+    --border: rgba(255,255,255,0.06);
+    --border-strong: rgba(255,255,255,0.12);
+    --text: #F1F5F9;
+    --text-muted: #94A3B8;
+    --text-subtle: #64748B;
+    --accent: #06B6D4;
+    --accent-2: #22D3EE;
+    --accent-glow: rgba(6,182,212,0.15);
+    --navy: #0E1525;
+    --green: #10B981;
+    --green-bright: #34D399;
+    --green-bg: rgba(16,185,129,0.12);
+    --amber: #F59E0B;
+    --amber-bright: #FBBF24;
+    --amber-bg: rgba(245,158,11,0.12);
+    --red: #EF4444;
+    --red-bright: #F87171;
+    --red-bg: rgba(239,68,68,0.12);
+    --blue: #3B82F6;
+    --blue-bright: #60A5FA;
+    --blue-bg: rgba(59,130,246,0.12);
+    --violet: #8B5CF6;
+    --violet-bright: #A78BFA;
+    --violet-bg: rgba(139,92,246,0.12);
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    background-image:
+      radial-gradient(circle at 0% 0%, rgba(6,182,212,0.04) 0%, transparent 50%),
+      radial-gradient(circle at 100% 100%, rgba(139,92,246,0.04) 0%, transparent 50%);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+    font-feature-settings: 'cv11', 'ss01';
+  }
+
+  /* Tailwind overrides for dark mode */
+  .bg-white { background: var(--surface) !important; }
+  .bg-gray-50 { background: var(--surface-elev) !important; }
+  .bg-gray-100 { background: var(--surface-elev) !important; }
+  .bg-blue-50 { background: var(--blue-bg) !important; }
+  .bg-blue-600 { background: var(--accent) !important; color: #021014 !important; font-weight: 600; }
+  .bg-blue-600:hover { background: var(--accent-2) !important; }
+  .bg-green-50 { background: var(--green-bg) !important; }
+  .bg-amber-50 { background: var(--amber-bg) !important; }
+  .bg-green-200 { background: rgba(16,185,129,0.25) !important; color: var(--green-bright) !important; }
+  .text-gray-400, .text-gray-500, .text-gray-600 { color: var(--text-muted) !important; }
+  .text-gray-700 { color: var(--text) !important; }
+  .text-green-600 { color: var(--green-bright) !important; }
+  .text-red-600 { color: var(--red-bright) !important; }
+  .text-amber-600 { color: var(--amber-bright) !important; }
+  .text-blue-600 { color: var(--accent-2) !important; }
+  .text-blue-600:hover { color: var(--accent) !important; }
+  .border-gray-200 { border-color: var(--border) !important; }
+  .border-gray-300 { border-color: var(--border-strong) !important; }
+
+  input, textarea {
+    background: var(--surface) !important;
+    color: var(--text) !important;
+    border-color: var(--border-strong) !important;
+  }
+  input::placeholder { color: var(--text-subtle) !important; }
+  input:focus, textarea:focus { border-color: var(--accent) !important; outline: none !important; box-shadow: 0 0 0 2px var(--accent-glow) !important; }
+
+  /* Header */
+  header {
+    background: rgba(10,14,26,0.85) !important;
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border) !important;
+  }
+
+  /* Sidebar */
+  aside {
+    background: linear-gradient(180deg, #0E1525 0%, #0A0E1A 100%) !important;
+    border-right: 1px solid var(--border);
+  }
+  .sidebar-link {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 14px; margin: 0 6px;
+    border-radius: 6px;
+    color: var(--text-muted);
+    font-size: 13px; cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+  }
+  .sidebar-link:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+  .sidebar-link.active {
+    background: var(--accent-glow);
+    color: var(--accent-2);
+    font-weight: 500;
+    box-shadow: inset 2px 0 0 var(--accent);
+  }
+  .sidebar-link.has-sub {
+    font-size: 10.5px; text-transform: uppercase;
+    letter-spacing: 1px; color: var(--text-subtle);
+    padding-bottom: 4px; padding-top: 18px;
+    cursor: default; pointer-events: none;
+    margin-left: 14px;
+  }
+  .sidebar-link.has-sub:hover { background: transparent; color: var(--text-subtle); }
+
+  /* Badges */
+  .badge {
+    display: inline-flex; align-items: center;
+    padding: 2px 8px; border-radius: 4px;
+    font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    border: 1px solid transparent;
+  }
+  .badge-live {
+    background: var(--green-bg);
+    color: var(--green-bright);
+    border-color: rgba(16,185,129,0.3);
+  }
+  .badge-soon {
+    background: var(--amber-bg);
+    color: var(--amber-bright);
+    border-color: rgba(245,158,11,0.3);
+  }
+  .badge-phase {
+    background: var(--violet-bg);
+    color: var(--violet-bright);
+    border-color: rgba(139,92,246,0.3);
+  }
+
+  /* KPI cards */
+  .kpi-card {
+    background: var(--surface);
+    border-radius: 10px;
+    padding: 18px 20px;
+    border: 1px solid var(--border);
+    transition: all 0.2s;
+  }
+  .kpi-card:hover { border-color: var(--border-strong); transform: translateY(-1px); }
+  .kpi-label {
+    font-size: 11px; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 1px;
+    font-weight: 500;
+  }
+  .kpi-value {
+    font-size: 26px; font-weight: 600;
+    color: var(--text); margin-top: 6px;
+    letter-spacing: -0.02em;
+  }
+  .kpi-delta { font-size: 12px; margin-top: 4px; font-weight: 500; }
+  .delta-pos { color: var(--green-bright); }
+  .delta-neg { color: var(--red-bright); }
+  .delta-flat { color: var(--text-muted); }
+
+  /* Panels */
+  .panel {
+    background: var(--surface);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .panel-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between;
+    align-items: center;
+    background: var(--surface);
+  }
+  .panel-header h3 { color: var(--text); font-weight: 600; }
+  .panel-body { padding: 20px; }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left; padding: 10px 16px;
+    font-size: 10px; text-transform: uppercase;
+    color: var(--text-subtle); font-weight: 600;
+    letter-spacing: 1px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-elev);
+  }
+  td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    color: var(--text);
+  }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+  tr:last-child td { border-bottom: none; }
+
+  /* Tables with .border-collapse override */
+  table.border-collapse th, table.border-collapse td {
+    border-color: var(--border) !important;
+  }
+
+  /* Coming-soon banner */
+  .coming-soon-banner {
+    background: linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(139,92,246,0.06) 100%);
+    border: 1px solid rgba(245,158,11,0.3);
+    border-radius: 10px;
+    padding: 14px 20px;
+    margin-bottom: 24px;
+    display: flex; align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    color: var(--text);
+    font-size: 14px;
+    position: relative;
+    overflow: hidden;
+  }
+  .coming-soon-banner::before {
+    content: ''; position: absolute;
+    top: 0; left: 0; bottom: 0; width: 3px;
+    background: linear-gradient(180deg, var(--amber), var(--violet));
+  }
+  .coming-soon-banner strong { color: var(--amber-bright); font-weight: 600; }
+
+  /* Feature list */
+  .feature-list li {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; gap: 12px;
+    font-size: 14px; line-height: 1.5;
+    color: var(--text);
+  }
+  .feature-list li:last-child { border-bottom: none; }
+  .feature-list .icon {
+    color: var(--accent);
+    flex-shrink: 0; font-weight: bold;
+  }
+
+  /* Mock card */
+  .mock-card {
+    background: var(--surface-elev);
+    border: 1px dashed var(--border-strong);
+    border-radius: 10px;
+    padding: 32px 20px;
+    color: var(--text-muted);
+  }
+
+  /* Quadrant grid */
+  .quadrant-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .quadrant-tile {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    transition: all 0.2s;
+  }
+  .quadrant-tile:hover {
+    border-color: var(--border-strong);
+    transform: translateY(-1px);
+  }
+
+  /* Pills */
+  .pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    border: 1px solid transparent;
+  }
+  .pill-vip {
+    background: var(--amber-bg);
+    color: var(--amber-bright);
+    border-color: rgba(245,158,11,0.25);
+  }
+  .pill-regular {
+    background: var(--blue-bg);
+    color: var(--blue-bright);
+    border-color: rgba(59,130,246,0.25);
+  }
+  .pill-casual {
+    background: var(--violet-bg);
+    color: var(--violet-bright);
+    border-color: rgba(139,92,246,0.25);
+  }
+  .pill-lapsed {
+    background: var(--red-bg);
+    color: var(--red-bright);
+    border-color: rgba(239,68,68,0.25);
+  }
+
+  /* Opportunity tags */
+  .opportunity {
+    background: var(--green-bg);
+    border-left: 3px solid var(--green);
+    padding: 8px 12px;
+    margin-bottom: 6px;
+    font-size: 13px;
+    border-radius: 4px;
+    color: var(--green-bright);
+    font-weight: 500;
+  }
+
+  /* Nav section visibility */
+  .nav-section { display: none; }
+  .nav-section.active { display: block; }
+
+  /* Case rows */
+  .case-row {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: 110px 1fr 120px 100px;
+    gap: 16px;
+    align-items: center;
+  }
+  .case-row:hover { background: var(--surface-hover); cursor: pointer; }
+  .severity-low { color: var(--text-muted); }
+  .severity-medium { color: var(--amber-bright); }
+  .severity-high { color: var(--red-bright); }
+
+  /* Chat bubbles */
+  .chat-bubble-customer {
+    background: var(--surface-elev);
+    color: var(--text);
+    padding: 10px 14px;
+    border-radius: 12px 12px 12px 2px;
+    max-width: 80%;
+    font-size: 14px;
+    margin-bottom: 4px;
+    border: 1px solid var(--border);
+  }
+  .chat-bubble-business {
+    background: var(--accent);
+    color: #021014;
+    padding: 10px 14px;
+    border-radius: 12px 12px 2px 12px;
+    max-width: 80%;
+    font-size: 14px;
+    margin-left: auto;
+    margin-bottom: 4px;
+    font-weight: 500;
+  }
+  .ai-suggestion {
+    background: linear-gradient(135deg, rgba(245,158,11,0.1), rgba(139,92,246,0.08));
+    border: 1px solid rgba(245,158,11,0.3);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 13px;
+    margin-top: 8px;
+    color: var(--text);
+  }
+
+  /* Scrollbars */
+  .scrollbar-thin::-webkit-scrollbar { width: 6px; }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+  /* Tenant menu */
+  #tenantMenu {
+    background: var(--surface) !important;
+    border-color: var(--border-strong) !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+  #tenantMenu button:hover { background: var(--surface-hover) !important; }
+
+  /* Headings hierarchy */
+  h1, h2, h3 { color: var(--text); letter-spacing: -0.01em; }
+  h1 { font-weight: 600; }
+  h2 { font-weight: 600; }
+  h3 { font-weight: 600; }
+
+  /* Brand text colour override */
+  [style*="color: var(--navy)"] { color: var(--text) !important; }
+
+  /* Buttons - generic */
+  button { transition: all 0.15s; }
+
+  /* Spinning live dot */
+  @keyframes pulse-glow {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(0.85); }
+  }
+  .badge-live svg circle { animation: pulse-glow 2s ease-in-out infinite; }
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- ============================================================ -->
+<!-- TOP HEADER                                                    -->
+<!-- ============================================================ -->
+<header class="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-50">
+  <div class="flex items-center gap-3">
+    <div class="w-9 h-9 rounded-md flex items-center justify-center" style="background: linear-gradient(135deg, #06B6D4, #0E7490); box-shadow: 0 0 16px rgba(6,182,212,0.3);">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#021014" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 4 C 11 4 10.5 4.7 10.5 5.5 C 10.5 6.3 11 7 12 7"/>
+        <path d="M12 7 L12 8.6"/>
+        <path d="M12 8.6 L3.5 14.5 L20.5 14.5 Z"/>
+      </svg>
+    </div>
+    <div>
+      <div class="font-semibold text-base tracking-tight" style="color: var(--text);">Hangr</div>
+      <div class="text-xs" style="color: var(--text-muted);">The operating system for modern dry cleaners</div>
+    </div>
+  </div>
+  <div class="flex items-center gap-6">
+    <!-- Tenant switcher -->
+    <div class="relative">
+      <button onclick="toggleTenantMenu()" class="flex items-center gap-2 px-3 py-1.5 border border-gray-200 rounded-md text-sm hover:bg-gray-50">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+        <span id="tenantName">Master Dry Cleaners</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </button>
+      <div id="tenantMenu" class="hidden absolute right-0 mt-1 w-72 bg-white border border-gray-200 rounded-md shadow-lg z-50">
+        <div class="px-3 py-2 text-xs text-gray-500 border-b border-gray-200">Switch tenant workspace (demo)</div>
+        <button onclick="switchTenant('Master Dry Cleaners', 7)" class="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm flex justify-between">
+          <span>Master Dry Cleaners</span><span class="text-xs text-gray-500">7 stores</span>
+        </button>
+        <button onclick="switchTenant('Joe’s Dry Cleaning', 2)" class="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm flex justify-between">
+          <span>Joe's Dry Cleaning</span><span class="text-xs text-gray-500">2 stores</span>
+        </button>
+        <button onclick="switchTenant('Sunshine Laundry Co', 4)" class="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm flex justify-between">
+          <span>Sunshine Laundry Co</span><span class="text-xs text-gray-500">4 stores</span>
+        </button>
+        <div class="px-3 py-2 text-xs text-gray-400 border-t border-gray-200 italic">Multi-tenant SaaS — each operator has their own isolated workspace.</div>
+      </div>
+    </div>
+    <button class="text-gray-500 hover:text-gray-700"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></button>
+    <div class="flex items-center gap-2">
+      <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold" style="background: linear-gradient(135deg, #06B6D4, #8B5CF6); color: #021014;">DH</div>
+      <span class="text-sm" style="color: var(--text);">David Hudson</span>
+    </div>
+  </div>
+</header>
+
+<div class="flex" style="min-height: calc(100vh - 60px);">
+
+<!-- ============================================================ -->
+<!-- LEFT SIDEBAR                                                  -->
+<!-- ============================================================ -->
+<aside class="w-64 flex-shrink-0 text-white py-4 px-3 scrollbar-thin overflow-y-auto" style="background: var(--navy); height: calc(100vh - 60px); position: sticky; top: 60px;">
+
+  <div class="sidebar-link has-sub">Operations</div>
+  <div class="sidebar-link active" onclick="showSection('dashboard')" id="link-dashboard">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg>
+    Dashboard
+    <span class="badge badge-live ml-auto">LIVE</span>
+  </div>
+  <div class="sidebar-link" onclick="showSection('reports-daily')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+    Daily Report
+    <span class="badge badge-live ml-auto">LIVE</span>
+  </div>
+  <div class="sidebar-link" onclick="showSection('reports-weekly')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg>
+    Weekly Digest
+    <span class="badge badge-live ml-auto">LIVE</span>
+  </div>
+  <div class="sidebar-link" onclick="showSection('reports-monthly')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line></svg>
+    Monthly Analysis
+    <span class="badge badge-live ml-auto">LIVE</span>
+  </div>
+
+  <div class="sidebar-link has-sub">Customers</div>
+  <div class="sidebar-link" onclick="showSection('customer-profile')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+    Customer Profiles
+    <span class="badge badge-soon ml-auto">1B</span>
+  </div>
+  <div class="sidebar-link" onclick="showSection('quadrants')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect></svg>
+    Quadrants (A–Z)
+    <span class="badge badge-soon ml-auto">1B</span>
+  </div>
+  <div class="sidebar-link" onclick="showSection('lapsed')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+    Lapsed & Out-of-Sequence
+    <span class="badge badge-soon ml-auto">1B</span>
+  </div>
+
+  <div class="sidebar-link has-sub">Marketing</div>
+  <div class="sidebar-link" onclick="showSection('campaigns-quadrant')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="2" x2="12" y2="22"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+    Quadrant Campaigns
+    <span class="badge badge-soon ml-auto">1B</span>
+  </div>
+  <div class="sidebar-link" onclick="showSection('campaigns-sms')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+    SMS Campaigns
+    <span class="badge badge-soon ml-auto">1B</span>
+  </div>
+  <div class="sidebar-link" onclick="showSection('campaigns-email')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+    Email Campaigns
+    <span class="badge badge-soon ml-auto">2</span>
+  </div>
+  <div class="sidebar-link" onclick="showSection('referrals')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><polyline points="17 11 19 13 23 9"></polyline></svg>
+    Referral Programme
+    <span class="badge badge-soon ml-auto">1B</span>
+  </div>
+  <div class="sidebar-link" onclick="showSection('reviews')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+    Google Reviews
+    <span class="badge badge-soon ml-auto">1B</span>
+  </div>
+  <div class="sidebar-link" onclick="showSection('social')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+    Social Media
+    <span class="badge badge-soon ml-auto">2</span>
+  </div>
+  <div class="sidebar-link" onclick="showSection('conversion')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+    Conversion Tracker
+    <span class="badge badge-soon ml-auto">1B</span>
+  </div>
+  <div class="sidebar-link" onclick="showSection('new-customer')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+    New Customer Sequences
+    <span class="badge badge-soon ml-auto">2</span>
+  </div>
+
+  <div class="sidebar-link has-sub">Conversations</div>
+  <div class="sidebar-link" onclick="showSection('chat-inbox')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+    Inbox
+    <span class="badge badge-soon ml-auto">2</span>
+  </div>
+  <div class="sidebar-link" onclick="showSection('chat-kb')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+    Knowledge Base
+    <span class="badge badge-soon ml-auto">2</span>
+  </div>
+
+  <div class="sidebar-link has-sub">Operations</div>
+  <div class="sidebar-link" onclick="showSection('claims')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+    Claims & Problem Solver
+    <span class="badge badge-soon ml-auto">1B</span>
+  </div>
+  <div class="sidebar-link" onclick="showSection('pricing')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+    Pricing Intelligence
+    <span class="badge badge-soon ml-auto">2</span>
+  </div>
+
+  <div class="sidebar-link has-sub">AI</div>
+  <div class="sidebar-link" onclick="showSection('consultant-ops')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+    Consultant — Operational
+    <span class="badge badge-soon ml-auto">3</span>
+  </div>
+  <div class="sidebar-link" onclick="showSection('consultant-tech')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+    Technical Library (DIA/DLI)
+    <span class="badge badge-soon ml-auto">3</span>
+  </div>
+
+  <div class="sidebar-link has-sub">Settings</div>
+  <div class="sidebar-link" onclick="showSection('settings-stores')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+    Stores
+  </div>
+  <div class="sidebar-link" onclick="showSection('settings-pos')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+    POS Connection
+  </div>
+  <div class="sidebar-link" onclick="showSection('settings-billing')">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+    Subscription
+  </div>
+</aside>
+
+<!-- ============================================================ -->
+<!-- MAIN CONTENT                                                  -->
+<!-- ============================================================ -->
+<main class="flex-1 p-6 overflow-y-auto" id="main">
+
+<!-- ===== DASHBOARD (LIVE) ===== -->
+<div class="nav-section active" id="section-dashboard">
+  <div class="flex justify-between items-start mb-5">
+    <div>
+      <h1 class="text-2xl font-semibold" style="color: var(--navy)">Dashboard</h1>
+      <p class="text-sm text-gray-500 mt-1">Real-time view of group performance · Master Dry Cleaners · Data through W/E 26 Apr 2026</p>
+    </div>
+    <span class="badge badge-live"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" class="mr-1"><circle cx="12" cy="12" r="6"></circle></svg> LIVE — Phase 1A</span>
+  </div>
+
+  <!-- KPI strip -->
+  <div class="grid grid-cols-4 gap-4 mb-6">
+    <div class="kpi-card">
+      <div class="kpi-label">Yesterday</div>
+      <div class="kpi-value">$8,523</div>
+      <div class="kpi-delta delta-pos">+12.4% vs same-Sat 4w avg</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Last week total</div>
+      <div class="kpi-value">$66,870</div>
+      <div class="kpi-delta delta-neg">−12.3% vs 12W avg ($76,214)</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">12-week trend</div>
+      <div class="kpi-value">−2.1%</div>
+      <div class="kpi-delta delta-flat">Group softening (last 12W vs prior 12W)</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Open claims</div>
+      <div class="kpi-value">3</div>
+      <div class="kpi-delta delta-neg">1 overdue · review now</div>
+    </div>
+  </div>
+
+  <!-- Group trend chart + Store leaderboard side by side -->
+  <div class="grid grid-cols-3 gap-4 mb-6">
+    <div class="panel col-span-2">
+      <div class="panel-header"><h3 class="font-semibold">Group weekly sales — last 12 weeks</h3><span class="text-xs text-gray-500">12-week rolling lens</span></div>
+      <div class="panel-body" style="height: 260px;"><canvas id="groupTrendChart"></canvas></div>
+    </div>
+    <div class="panel">
+      <div class="panel-header"><h3 class="font-semibold">Store leaderboard</h3><span class="text-xs text-gray-500">Last week</span></div>
+      <div class="panel-body p-0">
+        <table>
+          <thead><tr><th>Store</th><th>Last wk</th><th>12W avg</th><th>Δ%</th></tr></thead>
+          <tbody id="storeLeaderboard"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Yesterday breakdown + Anomalies -->
+  <div class="grid grid-cols-3 gap-4 mb-6">
+    <div class="panel col-span-2">
+      <div class="panel-header"><h3 class="font-semibold">Yesterday by service — Sat 02 May 2026</h3></div>
+      <div class="panel-body p-0">
+        <table>
+          <thead><tr><th>Service</th><th>Sales</th><th>Orders</th><th>Pieces</th><th>$/piece</th></tr></thead>
+          <tbody id="yestServices"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header"><h3 class="font-semibold">Flags & anomalies</h3></div>
+      <div class="panel-body" style="font-size: 13px;">
+        <div class="mb-3 p-3 rounded-lg" style="background: var(--red-bg); border: 1px solid rgba(239,68,68,0.25); color: var(--text);">
+          <strong style="color: var(--red-bright);">🔴 South Kingsville</strong> — 12W avg dropped from $23,265 to $20,158 (−13.4%). Last 4 weeks worse at $17,824.
+        </div>
+        <div class="mb-3 p-3 rounded-lg" style="background: var(--amber-bg); border: 1px solid rgba(245,158,11,0.25); color: var(--text);">
+          <strong style="color: var(--amber-bright);">🟡 Albert Park</strong> — softening on 12W (−6.1%) but stabilising on last 4 weeks.
+        </div>
+        <div class="mb-3 p-3 rounded-lg" style="background: var(--green-bg); border: 1px solid rgba(16,185,129,0.25); color: var(--text);">
+          <strong style="color: var(--green-bright);">🟢 Route</strong> — 12W avg up 19.8%. Capacity & pricing review suggested.
+        </div>
+        <div class="mb-3 p-3 rounded-lg" style="background: var(--green-bg); border: 1px solid rgba(16,185,129,0.25); color: var(--text);">
+          <strong style="color: var(--green-bright);">🟢 Dr Drapes</strong> — last 4 weeks 35% above 12W avg.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top services + Active campaigns side by side -->
+  <div class="grid grid-cols-2 gap-4">
+    <div class="panel">
+      <div class="panel-header"><h3 class="font-semibold">Top services — last 12 months</h3></div>
+      <div class="panel-body p-0">
+        <table>
+          <thead><tr><th>Service</th><th>Revenue</th></tr></thead>
+          <tbody id="topServices12mo"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header"><h3 class="font-semibold">Active campaigns</h3><span class="badge badge-soon">Phase 1B preview</span></div>
+      <div class="panel-body" style="opacity: 0.7;">
+        <div class="mb-3 p-3 rounded-md" style="background: var(--surface-elev);">
+          <div class="flex justify-between items-center"><strong>Quadrant A–F · Doona Special</strong><span class="text-xs text-gray-500">Coming soon</span></div>
+          <div class="text-sm text-gray-600 mt-1">~890 customers · sent next Tuesday · est. $X return</div>
+        </div>
+        <div class="mb-3 p-3 rounded-md" style="background: var(--surface-elev);">
+          <div class="flex justify-between items-center"><strong>Lapsed Customers · Win-Back SMS</strong><span class="text-xs text-gray-500">Coming soon</span></div>
+          <div class="text-sm text-gray-600 mt-1">~340 customers not seen in 90+ days</div>
+        </div>
+        <div class="mb-3 p-3 rounded-md" style="background: var(--surface-elev);">
+          <div class="flex justify-between items-center"><strong>Top 100 · VIP Reward</strong><span class="text-xs text-gray-500">Coming soon</span></div>
+          <div class="text-sm text-gray-600 mt-1">100 highest-spend customers</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== DAILY REPORT (LIVE) ===== -->
+<div class="nav-section" id="section-reports-daily">
+  <div class="flex justify-between items-start mb-5">
+    <div><h1 class="text-2xl font-semibold" style="color: var(--navy)">Daily Report</h1><p class="text-sm text-gray-500 mt-1">Auto-generated 7:00 AM each morning</p></div>
+    <span class="badge badge-live">LIVE — Phase 1A</span>
+  </div>
+  <div class="panel"><div class="panel-body" style="font-family: ui-monospace, Menlo, monospace; font-size: 13px; line-height: 1.6;">
+    <h2 style="font-size: 18px; font-weight: 600;">Daily Sales Summary — Sat 02 May 2026</h2>
+    <p style="color: var(--muted); font-style: italic;">Master Dry Cleaners · Generated 07:00 03 May 2026</p>
+    <h3 style="margin-top: 16px; font-weight: 600;">Headline</h3>
+    <ul class="list-disc pl-6"><li><strong>Group total: $8,523</strong> (268 orders, 608 pieces)</li><li>vs same-Saturday 4W avg: <strong class="text-green-600">+12.4%</strong></li><li>vs 7-day rolling avg: <strong class="text-green-600">+8.2%</strong></li></ul>
+    <h3 style="margin-top: 16px; font-weight: 600;">Store performance</h3>
+    <table class="border-collapse mt-2" style="width: 100%;"><thead><tr style="background: var(--surface-elev);"><th style="padding: 6px 10px; border: 1px solid var(--border); text-align: left;">Store</th><th style="padding: 6px 10px; border: 1px solid var(--border);">Yesterday</th><th style="padding: 6px 10px; border: 1px solid var(--border);">4W Avg (same DOW)</th><th style="padding: 6px 10px; border: 1px solid var(--border);">Δ%</th><th style="padding: 6px 10px; border: 1px solid var(--border);">Status</th></tr></thead>
+      <tbody>
+        <tr><td style="padding: 6px 10px; border: 1px solid var(--border);">Albert Park</td><td style="padding: 6px 10px; border: 1px solid var(--border); text-align: right;">$3,330</td><td style="padding: 6px 10px; border: 1px solid var(--border); text-align: right;">$2,920</td><td style="padding: 6px 10px; border: 1px solid var(--border); text-align: right; color: #10B981;">+14.0%</td><td style="padding: 6px 10px; border: 1px solid var(--border); text-align: center;">🟢</td></tr>
+        <tr><td style="padding: 6px 10px; border: 1px solid var(--border);">Werribee</td><td style="padding: 6px 10px; border: 1px solid var(--border); text-align: right;">$1,490</td><td style="padding: 6px 10px; border: 1px solid var(--border); text-align: right;">$1,320</td><td style="padding: 6px 10px; border: 1px solid var(--border); text-align: right; color: #10B981;">+12.9%</td><td style="padding: 6px 10px; border: 1px solid var(--border); text-align: center;">·</td></tr>
+        <tr><td style="padding: 6px 10px; border: 1px solid var(--border);">South Kingsville</td><td style="padding: 6px 10px; border: 1px solid var(--border); text-align: right;">$1,082</td><td style="padding: 6px 10px; border: 1px solid var(--border); text-align: right;">$1,580</td><td style="padding: 6px 10px; border: 1px solid var(--border); text-align: right; color: #EF4444;">−31.5%</td><td style="padding: 6px 10px; border: 1px solid var(--border); text-align: center;">🔴</td></tr>
+        <tr><td style="padding: 6px 10px; border: 1px solid var(--border);">The Butler</td><td style="padding: 6px 10px; border: 1px solid var(--border); text-align: right;">$897</td><td style="padding: 6px 10px; border: 1px solid var(--border); text-align: right;">$840</td><td style="padding: 6px 10px; border: 1px solid var(--border); text-align: right; color: #10B981;">+6.8%</td><td style="padding: 6px 10px; border: 1px solid var(--border); text-align: center;">·</td></tr>
+        <tr><td style="padding: 6px 10px; border: 1px solid var(--border);">Seddon</td><td style="padding: 6px 10px; border: 1px solid var(--border); text-align: right;">$804</td><td style="padding: 6px 10px; border: 1px solid var(--border); text-align: right;">$760</td><td style="padding: 6px 10px; border: 1px solid var(--border); text-align: right; color: #10B981;">+5.8%</td><td style="padding: 6px 10px; border: 1px solid var(--border); text-align: center;">·</td></tr>
+        <tr><td style="padding: 6px 10px; border: 1px solid var(--border);">Dennison's</td><td style="padding: 6px 10px; border: 1px solid var(--border); text-align: right;">$596</td><td style="padding: 6px 10px; border: 1px solid var(--border); text-align: right;">$520</td><td style="padding: 6px 10px; border: 1px solid var(--border); text-align: right; color: #10B981;">+14.6%</td><td style="padding: 6px 10px; border: 1px solid var(--border); text-align: center;">·</td></tr>
+        <tr><td style="padding: 6px 10px; border: 1px solid var(--border);">Route</td><td style="padding: 6px 10px; border: 1px solid var(--border); text-align: right;">$324</td><td style="padding: 6px 10px; border: 1px solid var(--border); text-align: right;">$280</td><td style="padding: 6px 10px; border: 1px solid var(--border); text-align: right; color: #10B981;">+15.7%</td><td style="padding: 6px 10px; border: 1px solid var(--border); text-align: center;">·</td></tr>
+      </tbody></table>
+    <h3 style="margin-top: 16px; font-weight: 600;">Anomalies & flags</h3>
+    <ul class="list-disc pl-6"><li>🔴 South Kingsville: −31.5% below 4w avg ($1,082 vs $1,580). Investigate cause.</li><li>⚠️ Master Textile Restoration: no data ingested — store closed, integration miss, or no sales</li></ul>
+  </div></div>
+</div>
+
+<!-- ===== WEEKLY DIGEST (LIVE) ===== -->
+<div class="nav-section" id="section-reports-weekly">
+  <div class="flex justify-between items-start mb-5">
+    <div><h1 class="text-2xl font-semibold" style="color: var(--navy)">Weekly Digest</h1><p class="text-sm text-gray-500 mt-1">Auto-generated 8:00 AM each Monday</p></div>
+    <span class="badge badge-live">LIVE — Phase 1A</span>
+  </div>
+  <div class="panel"><div class="panel-body">
+    <h2 class="text-lg font-semibold">Weekly Sales Digest — w/e Sat 26 Apr 2026</h2>
+    <p class="text-sm text-gray-500 italic mb-4">Master Dry Cleaners · Generated 08:00 27 Apr 2026</p>
+    <h3 class="font-semibold mt-4">Headline</h3>
+    <ul class="list-disc pl-6 text-sm"><li><strong>Group week total: $66,870</strong></li><li>vs prior week ($74,178): <strong class="text-red-600">−9.9%</strong></li><li>vs 12-week avg ($76,214): <strong class="text-red-600">−12.3%</strong></li></ul>
+    <h3 class="font-semibold mt-4">Store rankings — this week</h3>
+    <table class="text-sm w-full mt-2 border-collapse"><thead><tr style="background: var(--surface-elev);"><th class="p-2 border text-left">Store</th><th class="p-2 border text-right">This week</th><th class="p-2 border text-right">12W avg</th><th class="p-2 border text-right">Δ vs 12W</th><th class="p-2 border text-center">Status</th></tr></thead>
+      <tbody>
+        <tr><td class="p-2 border">South Kingsville</td><td class="p-2 border text-right">$14,684</td><td class="p-2 border text-right">$20,158</td><td class="p-2 border text-right text-red-600">−27.2%</td><td class="p-2 border text-center">🔴</td></tr>
+        <tr><td class="p-2 border">Albert Park</td><td class="p-2 border text-right">$14,179</td><td class="p-2 border text-right">$16,294</td><td class="p-2 border text-right text-red-600">−13.0%</td><td class="p-2 border text-center">🔴</td></tr>
+        <tr><td class="p-2 border">Werribee</td><td class="p-2 border text-right">$12,162</td><td class="p-2 border text-right">$12,861</td><td class="p-2 border text-right text-gray-600">−5.4%</td><td class="p-2 border text-center">·</td></tr>
+        <tr><td class="p-2 border">Route</td><td class="p-2 border text-right">$11,152</td><td class="p-2 border text-right">$9,429</td><td class="p-2 border text-right text-green-600">+18.3%</td><td class="p-2 border text-center">🟢</td></tr>
+        <tr><td class="p-2 border">Butler</td><td class="p-2 border text-right">$10,140</td><td class="p-2 border text-right">$11,940</td><td class="p-2 border text-right text-red-600">−15.1%</td><td class="p-2 border text-center">🔴</td></tr>
+        <tr><td class="p-2 border">Seddon</td><td class="p-2 border text-right">$4,553</td><td class="p-2 border text-right">$5,531</td><td class="p-2 border text-right text-red-600">−17.7%</td><td class="p-2 border text-center">🔴</td></tr>
+      </tbody></table>
+    <h3 class="font-semibold mt-4">Consultant commentary</h3>
+    <p class="text-sm">Soft week across the group — group total down 12.3% on 12W avg. South Kingsville continues its concerning slide (−27.2% on the week, second consecutive double-digit drop). Route is the bright spot (+18.3%) and worth a capacity review. Albert Park, Butler and Seddon all in the −13 to −18% range — likely cyclical (W/E close to Anzac long weekend) but worth monitoring next week to confirm.</p>
+  </div></div>
+</div>
+
+<!-- ===== MONTHLY ANALYSIS (LIVE) ===== -->
+<div class="nav-section" id="section-reports-monthly">
+  <div class="flex justify-between items-start mb-5">
+    <div><h1 class="text-2xl font-semibold" style="color: var(--navy)">Monthly Analysis</h1><p class="text-sm text-gray-500 mt-1">Auto-generated 9:00 AM, 1st of each month</p></div>
+    <span class="badge badge-live">LIVE — Phase 1A</span>
+  </div>
+  <div class="panel"><div class="panel-body">
+    <h2 class="text-lg font-semibold">Monthly Sales Analysis — March 2026</h2>
+    <h3 class="font-semibold mt-3">Headline</h3>
+    <ul class="list-disc pl-6 text-sm"><li><strong>Group total for March 2026: $250,958</strong></li><li>vs March 2025 ($196,068): <strong class="text-green-600">+28.0%</strong></li><li>Seasonal index for March (vs 2024 monthly avg): <strong>0.89x</strong></li></ul>
+    <h3 class="font-semibold mt-4">Top services / products</h3>
+    <table class="text-sm mt-2 w-full border-collapse"><thead><tr style="background: var(--surface-elev);"><th class="p-2 border text-left">Service</th><th class="p-2 border text-right">This month</th><th class="p-2 border text-right">Prior year</th><th class="p-2 border text-right">Δ %</th></tr></thead>
+      <tbody>
+        <tr><td class="p-2 border">Dry Cleaning</td><td class="p-2 border text-right">$86,499</td><td class="p-2 border text-right">$94,606</td><td class="p-2 border text-right text-red-600">−8.6%</td></tr>
+        <tr><td class="p-2 border">Shirts</td><td class="p-2 border text-right">$56,056</td><td class="p-2 border text-right">$24,736</td><td class="p-2 border text-right text-green-600">+126.6%</td></tr>
+        <tr><td class="p-2 border">Dry Cleaning Route</td><td class="p-2 border text-right">$20,782</td><td class="p-2 border text-right">$12,095</td><td class="p-2 border text-right text-green-600">+71.8%</td></tr>
+        <tr><td class="p-2 border">InLaundry</td><td class="p-2 border text-right">$11,717</td><td class="p-2 border text-right">$3,883</td><td class="p-2 border text-right text-green-600">+201.8%</td></tr>
+        <tr><td class="p-2 border">Wedding</td><td class="p-2 border text-right">$6,222</td><td class="p-2 border text-right">$3,090</td><td class="p-2 border text-right text-green-600">+101.4%</td></tr>
+        <tr><td class="p-2 border">Household</td><td class="p-2 border text-right">$8,101</td><td class="p-2 border text-right">$14,209</td><td class="p-2 border text-right text-red-600">−43.0%</td></tr>
+      </tbody></table>
+    <h3 class="font-semibold mt-4">📈 Emerging</h3>
+    <ul class="list-disc pl-6 text-sm"><li><strong>Dress Hire</strong>: $2,360 (NEW vs prior year)</li><li><strong>Shirts</strong>: $56k (+126.6% YoY)</li><li><strong>InLaundry</strong>: $11.7k (+201.8% YoY)</li></ul>
+    <h3 class="font-semibold mt-4">📉 Declining</h3>
+    <ul class="list-disc pl-6 text-sm"><li><strong>Household</strong>: −43.0% YoY — investigate</li></ul>
+  </div></div>
+</div>
+
+<!-- ===== CUSTOMER PROFILE (1B preview, interactive demo) ===== -->
+<div class="nav-section" id="section-customer-profile">
+  <div class="flex justify-between items-start mb-5">
+    <div><h1 class="text-2xl font-semibold" style="color: var(--navy)">Customer Profiles</h1><p class="text-sm text-gray-500 mt-1">On-demand customer intelligence — built when needed, never bulk-imported</p></div>
+    <span class="badge badge-soon">Phase 1B — Interactive Preview</span>
+  </div>
+
+  <div class="coming-soon-banner">
+    <div><strong>How this will work in production:</strong> Search for a customer, the platform pulls their full POS history via API, runs analysis, and surfaces a profile. <strong>Data stays in your POS — we don't hold a copy.</strong></div>
+  </div>
+
+  <!-- Search bar -->
+  <div class="panel mb-5">
+    <div class="panel-body">
+      <div class="flex gap-2">
+        <input type="text" id="customerSearch" placeholder="Search by surname, mobile, or customer ID..." class="flex-1 px-4 py-2 border border-gray-300 rounded-md text-sm" oninput="filterCustomers()" />
+        <button class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium">Search</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-3 gap-4">
+    <!-- Customer list -->
+    <div class="panel">
+      <div class="panel-header"><h3 class="font-semibold">Recent profiles built</h3></div>
+      <div class="panel-body p-0">
+        <div id="customerList"></div>
+      </div>
+    </div>
+    <!-- Customer profile detail -->
+    <div class="col-span-2 panel" id="customerDetail">
+      <div class="panel-body" id="customerDetailBody">
+        <div class="text-gray-500 text-sm text-center py-12">Click a customer to see their full profile.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== QUADRANTS ===== -->
+<div class="nav-section" id="section-quadrants">
+  <div class="flex justify-between items-start mb-5">
+    <div><h1 class="text-2xl font-semibold" style="color: var(--navy)">Quadrants — The Hangr Marketing Model</h1><p class="text-sm text-gray-500 mt-1">Customer base divided into four alphabetical quadrants. Each receives 1–2 targeted campaigns per year.</p></div>
+    <span class="badge badge-soon">Phase 1B Preview</span>
+  </div>
+  <div class="coming-soon-banner">
+    <div><strong>The Hangr model:</strong> Active customers split A–F, G–L, M–R, S–Z. One quadrant gets a targeted offer (doona special, alterations promo, household push) per cycle. Every customer is touched without over-communicating. Conversion tracked back to POS.</div>
+  </div>
+  <div class="quadrant-grid mb-6">
+    <div class="quadrant-tile" style="border-left: 4px solid #3B82F6;">
+      <div class="flex justify-between items-start mb-3"><h3 class="font-semibold text-lg">Quadrant A–F</h3><span class="pill pill-vip">Next campaign</span></div>
+      <div class="text-3xl font-bold" style="color: var(--navy)">~890</div>
+      <div class="text-xs text-gray-500">Active customers</div>
+      <div class="mt-3 text-sm">Last campaign: Doona Special · 14 Mar 2026<br><span class="text-gray-500">Conversion: 8.4% · Revenue: $4,200</span></div>
+      <div class="mt-3 p-2 rounded text-xs" style="background: var(--amber-bg); color: var(--amber-bright); border: 1px solid rgba(245,158,11,0.3);">Next scheduled: Doona / Blanket Special — 12 May 2026</div>
+    </div>
+    <div class="quadrant-tile" style="border-left: 4px solid #10B981;">
+      <div class="flex justify-between items-start mb-3"><h3 class="font-semibold text-lg">Quadrant G–L</h3><span class="pill pill-regular">Idle</span></div>
+      <div class="text-3xl font-bold" style="color: var(--navy)">~720</div>
+      <div class="text-xs text-gray-500">Active customers</div>
+      <div class="mt-3 text-sm">Last campaign: Household Push · 8 Feb 2026<br><span class="text-gray-500">Conversion: 11.2% · Revenue: $5,180</span></div>
+    </div>
+    <div class="quadrant-tile" style="border-left: 4px solid #F59E0B;">
+      <div class="flex justify-between items-start mb-3"><h3 class="font-semibold text-lg">Quadrant M–R</h3><span class="pill pill-casual">Idle</span></div>
+      <div class="text-3xl font-bold" style="color: var(--navy)">~840</div>
+      <div class="text-xs text-gray-500">Active customers</div>
+      <div class="mt-3 text-sm">Last campaign: Alterations Special · 4 Jan 2026<br><span class="text-gray-500">Conversion: 6.7% · Revenue: $2,940</span></div>
+    </div>
+    <div class="quadrant-tile" style="border-left: 4px solid #EF4444;">
+      <div class="flex justify-between items-start mb-3"><h3 class="font-semibold text-lg">Quadrant S–Z</h3><span class="pill pill-casual">Idle</span></div>
+      <div class="text-3xl font-bold" style="color: var(--navy)">~610</div>
+      <div class="text-xs text-gray-500">Active customers</div>
+      <div class="mt-3 text-sm">Last campaign: Curtains Push · 22 Nov 2025<br><span class="text-gray-500">Conversion: 4.1% · Revenue: $1,890</span></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header"><h3 class="font-semibold">Annual Hangr calendar — auto-scheduled</h3></div>
+    <div class="panel-body">
+      <table class="w-full text-sm">
+        <thead><tr><th>Month</th><th>Quadrant</th><th>Campaign</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>May 2026</td><td>A–F</td><td>Doona / Blanket Special (autumn)</td><td><span class="pill pill-regular">Scheduled</span></td></tr>
+          <tr><td>Jun 2026</td><td>G–L</td><td>Pre-winter coat clean</td><td><span class="pill pill-regular">Draft</span></td></tr>
+          <tr><td>Jul 2026</td><td>M–R</td><td>Wash, Dry, Fold winter</td><td><span class="pill pill-casual">Pending</span></td></tr>
+          <tr><td>Aug 2026</td><td>S–Z</td><td>Wedding & event clean</td><td><span class="pill pill-casual">Pending</span></td></tr>
+          <tr><td>Sep 2026</td><td>A–F</td><td>Spring household refresh</td><td><span class="pill pill-casual">Pending</span></td></tr>
+          <tr><td>Oct 2026</td><td>G–L</td><td>Curtains / drapes special</td><td><span class="pill pill-casual">Pending</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== LAPSED ===== -->
+<div class="nav-section" id="section-lapsed">
+  <div class="flex justify-between items-start mb-5">
+    <div><h1 class="text-2xl font-semibold" style="color: var(--navy)">Lapsed & Out-of-Sequence Customers</h1><p class="text-sm text-gray-500 mt-1">Customers drifted past their normal cadence — flagged for win-back campaigns</p></div>
+    <span class="badge badge-soon">Phase 1B Preview</span>
+  </div>
+  <div class="coming-soon-banner">
+    <div><strong>How it works:</strong> Each customer's normal visit cadence is calculated from their POS history. Those drifting past 1.5x their cadence are flagged. Win-back campaigns trigger automatically; conversion tracked.</div>
+  </div>
+  <div class="grid grid-cols-3 gap-4 mb-5">
+    <div class="kpi-card"><div class="kpi-label">Lapsed (>90d)</div><div class="kpi-value">342</div></div>
+    <div class="kpi-card"><div class="kpi-label">Out-of-sequence</div><div class="kpi-value">128</div></div>
+    <div class="kpi-card"><div class="kpi-label">Won back last 30d</div><div class="kpi-value">31</div></div>
+  </div>
+  <div class="panel"><div class="panel-header"><h3 class="font-semibold">Top lapsed customers by lifetime value</h3></div>
+    <div class="panel-body p-0">
+      <table>
+        <thead><tr><th>Customer</th><th>Last visit</th><th>Days lapsed</th><th>Lifetime spend</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td>Mrs Chen, K.</td><td>4 Jan 2026</td><td>119d</td><td>$4,820</td><td><span class="pill pill-regular">Win-back ready</span></td></tr>
+          <tr><td>Mr Wilson, T.</td><td>22 Dec 2025</td><td>132d</td><td>$3,440</td><td><span class="pill pill-regular">Win-back ready</span></td></tr>
+          <tr><td>Mrs Patel, A.</td><td>15 Nov 2025</td><td>169d</td><td>$2,920</td><td><span class="pill pill-lapsed">Final attempt</span></td></tr>
+          <tr><td>Mr Tran, L.</td><td>3 Jan 2026</td><td>120d</td><td>$2,610</td><td><span class="pill pill-regular">Win-back ready</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== QUADRANT CAMPAIGNS ===== -->
+<div class="nav-section" id="section-campaigns-quadrant">
+  <div class="flex justify-between items-start mb-5">
+    <div><h1 class="text-2xl font-semibold" style="color: var(--navy)">Quadrant Campaigns</h1><p class="text-sm text-gray-500 mt-1">Build, schedule, send and track quadrant-based SMS campaigns</p></div>
+    <span class="badge badge-soon">Phase 1B Preview</span>
+  </div>
+  <div class="coming-soon-banner"><div><strong>Workflow:</strong> Pick quadrant → choose offer template → AI personalises message → operator approves → scheduled send → conversion tracked back to POS over the following weeks → non-converters get follow-up. Closed loop.</div></div>
+  <div class="panel mb-4"><div class="panel-header"><h3 class="font-semibold">Campaign builder</h3></div>
+    <div class="panel-body">
+      <div class="grid grid-cols-2 gap-4 text-sm">
+        <div><label class="text-gray-600">Audience</label><div class="mt-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded">Quadrant A–F · ~890 customers</div></div>
+        <div><label class="text-gray-600">Send window</label><div class="mt-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded">Tuesday 12 May 2026 · 10:00 AM AEST</div></div>
+        <div class="col-span-2"><label class="text-gray-600">Message preview (AI-personalised)</label>
+          <div class="mt-1 p-3 border border-gray-200 rounded bg-gray-50" style="font-family: ui-monospace; font-size: 13px;">Hi {{first_name}}, with autumn here it's the perfect time to get your doonas, blankets and winter bedding professionally cleaned. Master Dry Cleaners is offering 20% off all household items until 31 May. Drop in to {{primary_store}} or reply for pickup. Reply STOP to opt out.</div>
+        </div>
+      </div>
+      <div class="mt-4 flex gap-2"><button class="px-4 py-2 bg-blue-600 text-white rounded text-sm font-medium">Schedule send</button><button class="px-4 py-2 border border-gray-300 rounded text-sm">Test on 5 customers</button></div>
+    </div>
+  </div>
+
+  <div class="panel"><div class="panel-header"><h3 class="font-semibold">Recent campaigns — performance</h3></div>
+    <div class="panel-body p-0">
+      <table>
+        <thead><tr><th>Campaign</th><th>Sent</th><th>Replies</th><th>Converted</th><th>Revenue attributed</th><th>ROI</th></tr></thead>
+        <tbody>
+          <tr><td>A–F · Doona Special (Mar)</td><td>884</td><td>43</td><td>74 (8.4%)</td><td>$4,200</td><td>14.0x</td></tr>
+          <tr><td>G–L · Household Push (Feb)</td><td>716</td><td>52</td><td>80 (11.2%)</td><td>$5,180</td><td>17.3x</td></tr>
+          <tr><td>M–R · Alterations (Jan)</td><td>838</td><td>21</td><td>56 (6.7%)</td><td>$2,940</td><td>9.8x</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SMS CAMPAIGNS ===== -->
+<div class="nav-section" id="section-campaigns-sms">
+  <div class="flex justify-between items-start mb-5">
+    <div><h1 class="text-2xl font-semibold" style="color: var(--navy)">SMS Campaigns</h1><p class="text-sm text-gray-500 mt-1">All SMS sending across the platform — Twilio + alternates</p></div>
+    <span class="badge badge-soon">Phase 1B Preview</span>
+  </div>
+  <div class="coming-soon-banner"><div><strong>Multi-provider SMS architecture:</strong> Each tenant connects their own Twilio account (or MessageMedia / ClickSend / SMSGlobal). Costs flow direct to tenant; sender ID stays theirs. Spam Act compliance and opt-out management built in.</div></div>
+  <div class="grid grid-cols-4 gap-4 mb-4">
+    <div class="kpi-card"><div class="kpi-label">SMS sent (30d)</div><div class="kpi-value">2,438</div></div>
+    <div class="kpi-card"><div class="kpi-label">Reply rate</div><div class="kpi-value">5.8%</div></div>
+    <div class="kpi-card"><div class="kpi-label">Conversion (avg)</div><div class="kpi-value">8.7%</div></div>
+    <div class="kpi-card"><div class="kpi-label">Cost (30d)</div><div class="kpi-value">$176</div></div>
+  </div>
+  <div class="panel"><div class="panel-header"><h3 class="font-semibold">Provider configuration</h3></div>
+    <div class="panel-body">
+      <div class="flex justify-between items-center p-3 bg-green-50 rounded mb-2"><div><strong>Twilio</strong> — Primary · Account ending ...A4F2</div><span class="badge badge-live">CONNECTED</span></div>
+      <div class="flex justify-between items-center p-3 bg-gray-50 rounded mb-2"><div><strong>MessageMedia</strong> — Backup · Not configured</div><button class="text-sm text-blue-600">Connect</button></div>
+      <div class="flex justify-between items-center p-3 bg-gray-50 rounded"><div><strong>ClickSend</strong> — Backup · Not configured</div><button class="text-sm text-blue-600">Connect</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== EMAIL CAMPAIGNS ===== -->
+<div class="nav-section" id="section-campaigns-email">
+  <div class="flex justify-between items-start mb-5">
+    <div><h1 class="text-2xl font-semibold" style="color: var(--navy)">Email Campaigns</h1><p class="text-sm text-gray-500 mt-1">Email parity for customers without mobile or who prefer email</p></div>
+    <span class="badge badge-soon">Phase 2</span>
+  </div>
+  <div class="coming-soon-banner"><div><strong>Coming in Phase 2:</strong> Email campaigns alongside SMS, with the same audience builder and conversion tracking. Templates for newsletters, seasonal offers, win-backs.</div></div>
+  <div class="mock-card text-center py-12"><div class="text-gray-500">Email module — Phase 2</div></div>
+</div>
+
+<!-- ===== REFERRAL PROGRAMME ===== -->
+<div class="nav-section" id="section-referrals">
+  <div class="flex justify-between items-start mb-5">
+    <div><h1 class="text-2xl font-semibold" style="color: var(--navy)">Referral Programme</h1><p class="text-sm text-gray-500 mt-1">Two-sided incentive · POS-tracked attribution · Compound acquisition</p></div>
+    <span class="badge badge-soon">Phase 1B Preview</span>
+  </div>
+  <div class="coming-soon-banner"><div><strong>How it works:</strong> Each customer gets a unique referral code or link. They share via SMS. Referee gets a welcome incentive on their first order. Referrer earns credit when the referee transacts. All tracked through POS.</div></div>
+  <div class="grid grid-cols-4 gap-4 mb-5">
+    <div class="kpi-card"><div class="kpi-label">Active referrers</div><div class="kpi-value">87</div></div>
+    <div class="kpi-card"><div class="kpi-label">Referrals sent (30d)</div><div class="kpi-value">142</div></div>
+    <div class="kpi-card"><div class="kpi-label">Converted</div><div class="kpi-value">28</div></div>
+    <div class="kpi-card"><div class="kpi-label">Revenue from referrals</div><div class="kpi-value">$3,640</div></div>
+  </div>
+  <div class="panel"><div class="panel-header"><h3 class="font-semibold">Top referrers — last 90 days</h3></div>
+    <div class="panel-body p-0">
+      <table>
+        <thead><tr><th>Customer</th><th>Referrals</th><th>Converted</th><th>Their credits earned</th></tr></thead>
+        <tbody>
+          <tr><td>Mrs Chen, K.</td><td>5</td><td>3</td><td>$60</td></tr>
+          <tr><td>Mr Patel, R.</td><td>4</td><td>2</td><td>$40</td></tr>
+          <tr><td>Ms Wong, J.</td><td>3</td><td>3</td><td>$60</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== GOOGLE REVIEWS ===== -->
+<div class="nav-section" id="section-reviews">
+  <div class="flex justify-between items-start mb-5">
+    <div><h1 class="text-2xl font-semibold" style="color: var(--navy)">Google Reviews</h1><p class="text-sm text-gray-500 mt-1">Auto-prompt happy customers · Suppress on negative sentiment · Drives local SEO</p></div>
+    <span class="badge badge-soon">Phase 1B Preview</span>
+  </div>
+  <div class="coming-soon-banner"><div><strong>Smart logic:</strong> Trigger after positive moments (first order, big-ticket job, claim resolved well). If customer signals dissatisfaction in ANY message, review request is suppressed and conversation routes to chat for resolution. Defends against negative public reviews.</div></div>
+  <div class="grid grid-cols-4 gap-4 mb-5">
+    <div class="kpi-card"><div class="kpi-label">Reviews requested (30d)</div><div class="kpi-value">340</div></div>
+    <div class="kpi-card"><div class="kpi-label">New reviews posted</div><div class="kpi-value">62</div></div>
+    <div class="kpi-card"><div class="kpi-label">Avg rating</div><div class="kpi-value">4.8 ★</div></div>
+    <div class="kpi-card"><div class="kpi-label">Suppressed (negative)</div><div class="kpi-value">8</div></div>
+  </div>
+  <div class="panel"><div class="panel-header"><h3 class="font-semibold">Reviews by store</h3></div>
+    <div class="panel-body p-0">
+      <table>
+        <thead><tr><th>Store</th><th>Total Google reviews</th><th>Avg rating</th><th>This month</th></tr></thead>
+        <tbody>
+          <tr><td>Albert Park</td><td>284</td><td>4.9 ★</td><td>+18</td></tr>
+          <tr><td>South Kingsville</td><td>196</td><td>4.7 ★</td><td>+12</td></tr>
+          <tr><td>Werribee</td><td>164</td><td>4.8 ★</td><td>+10</td></tr>
+          <tr><td>Butler</td><td>142</td><td>4.8 ★</td><td>+11</td></tr>
+          <tr><td>Seddon</td><td>98</td><td>4.6 ★</td><td>+6</td></tr>
+          <tr><td>Dennison's</td><td>76</td><td>4.7 ★</td><td>+5</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SOCIAL MEDIA ===== -->
+<div class="nav-section" id="section-social">
+  <div class="flex justify-between items-start mb-5">
+    <div><h1 class="text-2xl font-semibold" style="color: var(--navy)">Social Media</h1><p class="text-sm text-gray-500 mt-1">Auto-content calendar · Aussie public holidays · Local context</p></div>
+    <span class="badge badge-soon">Phase 2</span>
+  </div>
+  <div class="coming-soon-banner"><div><strong>Coming in Phase 2:</strong> Connect Facebook + Instagram business pages. AI-generated content scheduled to Australian public holidays, seasonal triggers, and local events. One-click post or auto-publish.</div></div>
+  <div class="mock-card text-center py-12"><div class="text-gray-500">Social Media — Phase 2</div></div>
+</div>
+
+<!-- ===== CONVERSION TRACKER ===== -->
+<div class="nav-section" id="section-conversion">
+  <div class="flex justify-between items-start mb-5">
+    <div><h1 class="text-2xl font-semibold" style="color: var(--navy)">Conversion Tracker</h1><p class="text-sm text-gray-500 mt-1">Every campaign attributed back to POS revenue · Closed-loop ROI</p></div>
+    <span class="badge badge-soon">Phase 1B Preview</span>
+  </div>
+  <div class="coming-soon-banner"><div><strong>Closed-loop tracking:</strong> Campaign sent → POS data checked over following weeks → who converted is removed from follow-up → non-converters get reminders → final incentive before campaign closes. Revenue attributed per recipient.</div></div>
+  <div class="panel"><div class="panel-header"><h3 class="font-semibold">Active campaigns — conversion in progress</h3></div>
+    <div class="panel-body p-0">
+      <table>
+        <thead><tr><th>Campaign</th><th>Sent</th><th>Recipients</th><th>Converted</th><th>Conversion rate</th><th>Revenue</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>A–F · Doona Special</td><td>14 Mar</td><td>884</td><td>74</td><td>8.4%</td><td>$4,200</td><td><span class="pill pill-vip">Tracking</span></td></tr>
+          <tr><td>G–L · Household Push</td><td>8 Feb</td><td>716</td><td>80</td><td>11.2%</td><td>$5,180</td><td><span class="pill pill-regular">Closed</span></td></tr>
+          <tr><td>Lapsed · Win-Back</td><td>1 Apr</td><td>340</td><td>31</td><td>9.1%</td><td>$2,210</td><td><span class="pill pill-vip">Tracking</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ===== NEW CUSTOMER SEQUENCES ===== -->
+<div class="nav-section" id="section-new-customer">
+  <div class="flex justify-between items-start mb-5">
+    <div><h1 class="text-2xl font-semibold" style="color: var(--navy)">New Customer Sequences</h1><p class="text-sm text-gray-500 mt-1">Automatic welcome + service-discovery sequence for new customers</p></div>
+    <span class="badge badge-soon">Phase 2</span>
+  </div>
+  <div class="coming-soon-banner"><div><strong>Coming in Phase 2:</strong> When a new customer is captured in POS, they auto-enrol into a welcome sequence introducing services they may not know exist (pickup/delivery, household, weddings, leather, alterations). Spaced over their first few months.</div></div>
+  <div class="mock-card text-center py-12"><div class="text-gray-500">New Customer Sequences — Phase 2</div></div>
+</div>
+
+<!-- ===== CHAT INBOX ===== -->
+<div class="nav-section" id="section-chat-inbox">
+  <div class="flex justify-between items-start mb-5">
+    <div><h1 class="text-2xl font-semibold" style="color: var(--navy)">Inbox — Two-Way Customer Chat</h1><p class="text-sm text-gray-500 mt-1">Inbound SMS replies · AI-suggested responses · Tag, assign, resolve</p></div>
+    <span class="badge badge-soon">Phase 2</span>
+  </div>
+  <div class="coming-soon-banner"><div><strong>Coming in Phase 2:</strong> Customer SMS replies flow into a unified inbox. AI auto-drafts responses using your business knowledge base, the active campaign, customer history, and your tone of voice. Two modes: auto-reply (high-volume / after-hours) or suggest-and-send (default).</div></div>
+  <div class="grid grid-cols-3 gap-4 mt-4" style="height: 500px;">
+    <div class="panel"><div class="panel-header"><h3 class="font-semibold text-sm">Conversations</h3><span class="badge badge-live">3 unread</span></div>
+      <div class="panel-body p-0">
+        <div class="p-3 border-b border-gray-200 bg-blue-50 cursor-pointer"><div class="font-medium">Mrs Chen, K.</div><div class="text-xs text-gray-600">"Can I pick up Friday after 5?"</div><div class="text-xs text-gray-400 mt-1">2 min ago · Albert Park</div></div>
+        <div class="p-3 border-b border-gray-200 cursor-pointer"><div class="font-medium">Mr Wilson, T.</div><div class="text-xs text-gray-600">"My shirt has a stain that wasn't..."</div><div class="text-xs text-gray-400 mt-1">14 min ago · Werribee · <span class="text-amber-600">complaint</span></div></div>
+        <div class="p-3 border-b border-gray-200 cursor-pointer"><div class="font-medium">Mrs Patel, A.</div><div class="text-xs text-gray-600">"Thanks for the doona offer — yes please!"</div><div class="text-xs text-gray-400 mt-1">1h ago · A–F campaign</div></div>
+        <div class="p-3 border-b border-gray-200 cursor-pointer"><div class="font-medium">Mr Tran, L.</div><div class="text-xs text-gray-600">"What time do you open Saturday?"</div><div class="text-xs text-gray-400 mt-1">3h ago · auto-replied</div></div>
+      </div>
+    </div>
+    <div class="col-span-2 panel">
+      <div class="panel-header"><div><h3 class="font-semibold text-sm">Mrs Chen, K. · Albert Park</h3><div class="text-xs text-gray-500">Customer since Jun 2018 · LTV $4,820</div></div><span class="pill pill-vip">VIP</span></div>
+      <div class="panel-body" style="overflow-y: auto;">
+        <div class="text-xs text-center text-gray-400 mb-3">Mrs Chen received the A–F Doona Special on Tue 14 Mar 2026</div>
+        <div class="chat-bubble-customer">Can I pick up Friday after 5?</div>
+        <div class="ai-suggestion"><strong>AI suggested reply:</strong> "Hi Karen — yes, Albert Park is open until 6pm Friday. Your doona will be ready then. Anything else you'd like cleaned at the same time? — Master DC Albert Park"
+          <div class="mt-2 flex gap-2"><button class="px-3 py-1 bg-blue-600 text-white rounded text-xs">Send</button><button class="px-3 py-1 border border-gray-300 rounded text-xs">Edit</button><button class="px-3 py-1 border border-gray-300 rounded text-xs">Other suggestion</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== KNOWLEDGE BASE ===== -->
+<div class="nav-section" id="section-chat-kb">
+  <div class="flex justify-between items-start mb-5">
+    <div><h1 class="text-2xl font-semibold" style="color: var(--navy)">Knowledge Base</h1><p class="text-sm text-gray-500 mt-1">Your business info that powers AI replies — fully editable</p></div>
+    <span class="badge badge-soon">Phase 2</span>
+  </div>
+  <div class="coming-soon-banner"><div><strong>Coming in Phase 2:</strong> The knowledge base trains the AI to answer like you. Opening hours, services, pickup zones, claim policy, brand voice — all editable. Operators expand it over time.</div></div>
+  <div class="grid grid-cols-2 gap-4">
+    <div class="panel"><div class="panel-header"><h3 class="font-semibold">Categories</h3></div><div class="panel-body p-0">
+      <div class="p-3 border-b border-gray-200 cursor-pointer hover:bg-gray-50">📍 Stores & opening hours · 7 entries</div>
+      <div class="p-3 border-b border-gray-200 cursor-pointer hover:bg-gray-50">🚚 Pickup & delivery · 4 entries</div>
+      <div class="p-3 border-b border-gray-200 cursor-pointer hover:bg-gray-50">💰 Pricing · 12 entries</div>
+      <div class="p-3 border-b border-gray-200 cursor-pointer hover:bg-gray-50">⏱ Turnaround times · 6 entries</div>
+      <div class="p-3 border-b border-gray-200 cursor-pointer hover:bg-gray-50">📋 Claims process · 3 entries</div>
+      <div class="p-3 border-b border-gray-200 cursor-pointer hover:bg-gray-50">🎨 Brand voice guidelines · 2 entries</div>
+    </div></div>
+    <div class="panel"><div class="panel-header"><h3 class="font-semibold">Sample entry — preview</h3></div><div class="panel-body">
+      <div class="text-xs text-gray-500 mb-1">Pickup & delivery zones</div>
+      <p class="text-sm">We offer free pickup and delivery in: Melbourne CBD, Albert Park, South Melbourne, St Kilda, Williamstown, Newport, Spotswood, Yarraville, Seddon, Footscray. Minimum order $30. Same-day pickup if requested before 10am, returned the next business day.</p>
+    </div></div>
+  </div>
+</div>
+
+<!-- ===== CLAIMS / PROBLEM SOLVER ===== -->
+<div class="nav-section" id="section-claims">
+  <div class="flex justify-between items-start mb-5">
+    <div><h1 class="text-2xl font-semibold" style="color: var(--navy)">Claims & Problem Solver</h1><p class="text-sm text-gray-500 mt-1">Customer issues at retail/commercial stores · Lost, damaged, complaints, repeat callers</p></div>
+    <span class="badge badge-soon">Phase 1B Preview</span>
+  </div>
+  <div class="coming-soon-banner"><div><strong>Built for the operator who handles claims daily.</strong> Every case is linked to the POS order, customer record, photos, and chat history. Auto-creates from chat keywords. SLA reminders. Audit-pack export for VCAT/insurance/legal.</div></div>
+  <div class="grid grid-cols-4 gap-4 mb-5">
+    <div class="kpi-card"><div class="kpi-label">Open cases</div><div class="kpi-value">3</div></div>
+    <div class="kpi-card"><div class="kpi-label">Overdue (>7d)</div><div class="kpi-value text-red-600">1</div></div>
+    <div class="kpi-card"><div class="kpi-label">Avg resolution</div><div class="kpi-value">2.4d</div></div>
+    <div class="kpi-card"><div class="kpi-label">Cost as % of rev (90d)</div><div class="kpi-value">0.6%</div></div>
+  </div>
+  <div class="panel"><div class="panel-header"><h3 class="font-semibold">Open cases</h3><button class="text-sm text-blue-600">+ New case</button></div>
+    <div class="panel-body p-0">
+      <div class="case-row"><div><span class="pill pill-lapsed">OVERDUE</span></div><div><strong>Mrs Wilson</strong> · Werribee · Damaged silk blouse · Opened 22 Apr<br><span class="text-xs text-gray-500">Order #18293 · awaiting Werribee response · severity: medium</span></div><div class="severity-medium">Damage</div><div>14 days ago</div></div>
+      <div class="case-row"><div><span class="pill pill-regular">Investigating</span></div><div><strong>Mr Patel</strong> · Albert Park · Missing shirt · Opened 1 May<br><span class="text-xs text-gray-500">Order #18467 · staff member checking · severity: low</span></div><div class="severity-low">Lost</div><div>2 days ago</div></div>
+      <div class="case-row"><div><span class="pill pill-casual">New</span></div><div><strong>Mrs Chen</strong> · Albert Park · Late pickup complaint · Opened today<br><span class="text-xs text-gray-500">Auto-created from chat · severity: low</span></div><div class="severity-low">Complaint</div><div>20 min ago</div></div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-4 mt-5">
+    <div class="panel"><div class="panel-header"><h3 class="font-semibold">Issue categories — last 90 days</h3></div>
+      <div class="panel-body p-0"><table>
+        <thead><tr><th>Category</th><th>Cases</th><th>Avg cost</th></tr></thead>
+        <tbody>
+          <tr><td>Damage</td><td>14</td><td>$118</td></tr>
+          <tr><td>Lost garment</td><td>8</td><td>$87</td></tr>
+          <tr><td>Dye / stain</td><td>5</td><td>$64</td></tr>
+          <tr><td>Late / pickup</td><td>11</td><td>$0</td></tr>
+          <tr><td>Repeat complainant</td><td>3</td><td>$210</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <div class="panel"><div class="panel-header"><h3 class="font-semibold">Phase 2 additions</h3></div><div class="panel-body">
+      <ul class="feature-list">
+        <li><span class="icon">→</span><div>Photo upload — damaged garment evidence</div></li>
+        <li><span class="icon">→</span><div>Auto-creation from chat keyword detection</div></li>
+        <li><span class="icon">→</span><div>DIA/DLI technical reference linking</div></li>
+        <li><span class="icon">→</span><div>VCAT/insurance audit pack export (PDF)</div></li>
+        <li><span class="icon">→</span><div>Repeat-complainant detection</div></li>
+        <li><span class="icon">→</span><div>Trend dashboard with root-cause categorisation</div></li>
+      </ul>
+    </div></div>
+  </div>
+</div>
+
+<!-- ===== PRICING INTELLIGENCE ===== -->
+<div class="nav-section" id="section-pricing">
+  <div class="flex justify-between items-start mb-5">
+    <div><h1 class="text-2xl font-semibold" style="color: var(--navy)">Pricing Intelligence</h1><p class="text-sm text-gray-500 mt-1">Quarterly pricing review · Competitor benchmarking · Selective customer pricing</p></div>
+    <span class="badge badge-soon">Phase 2</span>
+  </div>
+  <div class="coming-soon-banner"><div><strong>Coming in Phase 2:</strong> Pulls your price list from POS. Benchmarks against industry trends and online competitor pricing in your area. Suggests selective pricing — reward top customers, increase for infrequent. Quarterly review reports.</div></div>
+  <div class="mock-card text-center py-12"><div class="text-gray-500">Pricing Intelligence — Phase 2</div></div>
+</div>
+
+<!-- ===== CONSULTANT — OPERATIONAL ===== -->
+<div class="nav-section" id="section-consultant-ops">
+  <div class="flex justify-between items-start mb-5">
+    <div><h1 class="text-2xl font-semibold" style="color: var(--navy)">Consultant Mode — Operational</h1><p class="text-sm text-gray-500 mt-1">On-demand business advice · Trained on your data + industry knowledge</p></div>
+    <span class="badge badge-soon">Phase 3</span>
+  </div>
+  <div class="coming-soon-banner"><div><strong>Coming in Phase 3:</strong> Ask the consultant anything — pricing, staff ratios, marketing strategy, customer handling. Answers draw from your own business data and 30+ years of dry cleaning industry knowledge.</div></div>
+  <div class="panel"><div class="panel-body">
+    <div class="text-sm text-gray-600 mb-3">Sample queries:</div>
+    <div class="space-y-2">
+      <div class="p-3 bg-gray-50 rounded text-sm">💬 "What's a healthy wages% for a 5-store retail dry cleaning operation?"</div>
+      <div class="p-3 bg-gray-50 rounded text-sm">💬 "Why has my Albert Park store dropped 13% over the past 12 weeks?"</div>
+      <div class="p-3 bg-gray-50 rounded text-sm">💬 "I'm thinking of opening a 6th store in Newport — what's your read?"</div>
+      <div class="p-3 bg-gray-50 rounded text-sm">💬 "Tell me about Mrs Chen — what's her opportunity?"</div>
+    </div>
+  </div></div>
+</div>
+
+<!-- ===== TECHNICAL LIBRARY ===== -->
+<div class="nav-section" id="section-consultant-tech">
+  <div class="flex justify-between items-start mb-5">
+    <div><h1 class="text-2xl font-semibold" style="color: var(--navy)">Technical Library — DIA + DLI</h1><p class="text-sm text-gray-500 mt-1">Authoritative technical references for fabric, stains, claims, processes</p></div>
+    <span class="badge badge-soon">Phase 3</span>
+  </div>
+  <div class="coming-soon-banner"><div><strong>Coming in Phase 3:</strong> Searchable library of Drycleaning Institute of Australia and Drycleaning & Laundry Institute (US) technical bulletins. Cite the source when handling a claim or technical dispute. Members upload their own copies; future content licensing partnership possible.</div></div>
+  <div class="grid grid-cols-3 gap-4">
+    <div class="panel"><div class="panel-header"><h3 class="font-semibold text-sm">By topic</h3></div><div class="panel-body p-0">
+      <div class="p-2 px-3 border-b border-gray-200 hover:bg-gray-50 cursor-pointer text-sm">Fibres & fabrics (124)</div>
+      <div class="p-2 px-3 border-b border-gray-200 hover:bg-gray-50 cursor-pointer text-sm">Stain treatment (89)</div>
+      <div class="p-2 px-3 border-b border-gray-200 hover:bg-gray-50 cursor-pointer text-sm">Solvent management (42)</div>
+      <div class="p-2 px-3 border-b border-gray-200 hover:bg-gray-50 cursor-pointer text-sm">Machine operation (37)</div>
+      <div class="p-2 px-3 border-b border-gray-200 hover:bg-gray-50 cursor-pointer text-sm">Claims & disputes (28)</div>
+    </div></div>
+    <div class="col-span-2 panel"><div class="panel-header"><h3 class="font-semibold text-sm">Search</h3></div><div class="panel-body">
+      <input type="text" placeholder="e.g. 'why did this silk fabric discolour?'" class="w-full px-4 py-2 border border-gray-300 rounded text-sm" />
+      <div class="mt-3 text-sm text-gray-600">Sample results would surface DIA bulletin "Discolouration in protein fibres" + DLI tab on "Silk recovery procedures" with citations operators can take to a customer or insurance dispute.</div>
+    </div></div>
+  </div>
+</div>
+
+<!-- ===== SETTINGS — STORES ===== -->
+<div class="nav-section" id="section-settings-stores">
+  <div class="flex justify-between items-start mb-5">
+    <div><h1 class="text-2xl font-semibold" style="color: var(--navy)">Stores</h1><p class="text-sm text-gray-500 mt-1">Configure stores, types, and group definitions</p></div>
+  </div>
+  <div class="panel"><div class="panel-body p-0"><table>
+    <thead><tr><th>Store</th><th>Type</th><th>POS name</th><th>In group total</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>Albert Park</td><td>Retail</td><td>Master Dry Cleaners - Albert Park</td><td>✓</td><td><span class="pill pill-regular">Active</span></td></tr>
+      <tr><td>Seddon</td><td>Retail</td><td>Master Dry Cleaners - Seddon</td><td>✓</td><td><span class="pill pill-regular">Active</span></td></tr>
+      <tr><td>South Kingsville</td><td>Retail</td><td>Master Dry Cleaners - Sth Kingsville</td><td>✓</td><td><span class="pill pill-regular">Active</span></td></tr>
+      <tr><td>Werribee</td><td>Retail</td><td>Master Dry Cleaners - Werribee</td><td>✓</td><td><span class="pill pill-regular">Active</span></td></tr>
+      <tr><td>The Butler</td><td>Retail</td><td>The Butler Drive Thru Dry Cleaners</td><td>✓</td><td><span class="pill pill-regular">Active</span></td></tr>
+      <tr><td>Route</td><td>Commercial</td><td>Master Dry Cleaners - Route</td><td>✓</td><td><span class="pill pill-regular">Active</span></td></tr>
+      <tr><td>Dennison's</td><td>Retail</td><td>Dennison's Dry Cleaners</td><td>✓</td><td><span class="pill pill-regular">Active</span></td></tr>
+    </tbody>
+  </table></div></div>
+</div>
+
+<!-- ===== SETTINGS — POS ===== -->
+<div class="nav-section" id="section-settings-pos">
+  <div class="flex justify-between items-start mb-5">
+    <div><h1 class="text-2xl font-semibold" style="color: var(--navy)">POS Connection</h1><p class="text-sm text-gray-500 mt-1">Master DC connects to My Clean POS via DCCS Australia</p></div>
+  </div>
+  <div class="panel"><div class="panel-body">
+    <div class="flex items-center justify-between p-4 bg-green-50 rounded mb-4"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded bg-green-200 flex items-center justify-center">✓</div><div><div class="font-semibold">My Clean POS — Connected</div><div class="text-xs text-gray-600">master.pos.mydrycleaning.com.au</div></div></div><span class="badge badge-live">CONNECTED</span></div>
+    <div class="grid grid-cols-2 gap-4 text-sm"><div><label class="text-gray-600">Method</label><div class="mt-1 px-3 py-2 bg-gray-50 rounded">Daily browser export · XLSX (current)</div></div><div><label class="text-gray-600">Future method</label><div class="mt-1 px-3 py-2 bg-amber-50 rounded">DCCS API — pending partnership · Phase 1B</div></div><div><label class="text-gray-600">Last sync</label><div class="mt-1 px-3 py-2 bg-gray-50 rounded">07:00 03 May 2026 (auto)</div></div><div><label class="text-gray-600">Next sync</label><div class="mt-1 px-3 py-2 bg-gray-50 rounded">07:00 04 May 2026</div></div></div>
+  </div></div>
+</div>
+
+<!-- ===== SETTINGS — BILLING ===== -->
+<div class="nav-section" id="section-settings-billing">
+  <div class="flex justify-between items-start mb-5">
+    <div><h1 class="text-2xl font-semibold" style="color: var(--navy)">Subscription</h1><p class="text-sm text-gray-500 mt-1">Hybrid commercial model — three tiers</p></div>
+  </div>
+  <div class="grid grid-cols-3 gap-4 mb-5">
+    <div class="panel" style="border: 1px solid var(--border);"><div class="panel-body">
+      <div class="text-xs uppercase text-gray-500">Tier 1</div><h3 class="font-semibold mt-1">Self-Serve</h3>
+      <div class="text-3xl font-bold mt-3">$199<span class="text-sm text-gray-500">/mo</span></div>
+      <ul class="text-sm space-y-1 mt-4"><li>✓ Dashboard + reports</li><li>✓ Basic customer profile</li><li>✓ Quadrant SMS (DIY)</li><li>✓ Reviews + referrals</li><li>✓ Claims log MVP</li></ul>
+    </div></div>
+    <div class="panel" style="border: 2px solid var(--accent); position: relative;"><div class="panel-body">
+      <div class="absolute top-2 right-2"><span class="badge badge-live">YOUR PLAN</span></div>
+      <div class="text-xs uppercase text-gray-500">Tier 2</div><h3 class="font-semibold mt-1">Done-With-You</h3>
+      <div class="text-3xl font-bold mt-3">$799<span class="text-sm text-gray-500">/mo</span></div>
+      <ul class="text-sm space-y-1 mt-4"><li>✓ Everything in Tier 1</li><li>✓ Monthly account manager</li><li>✓ Campaigns run for you</li><li>✓ Full customer profile</li><li>✓ Chat widget + AI replies</li><li>✓ Claims module full</li></ul>
+    </div></div>
+    <div class="panel"><div class="panel-body">
+      <div class="text-xs uppercase text-gray-500">Tier 3</div><h3 class="font-semibold mt-1">Full Managed</h3>
+      <div class="text-3xl font-bold mt-3">$1,599<span class="text-sm text-gray-500">/mo</span></div>
+      <ul class="text-sm space-y-1 mt-4"><li>✓ Everything in Tier 2</li><li>✓ Consultant calls</li><li>✓ Multi-site reporting</li><li>✓ Custom integrations</li><li>✓ Priority support</li></ul>
+    </div></div>
+  </div>
+  <div class="panel"><div class="panel-body text-sm"><div class="grid grid-cols-3 gap-4"><div><div class="text-gray-500">Plan</div><div class="font-semibold mt-1">Tier 2 — Done-With-You</div></div><div><div class="text-gray-500">Status</div><div class="font-semibold mt-1 text-green-600">Active</div></div><div><div class="text-gray-500">Next billing</div><div class="font-semibold mt-1">1 Jun 2026 — $878.90 inc GST</div></div></div></div></div>
+</div>
+
+</main>
+</div>
+
+<!-- ============================================================ -->
+<!-- DATA + JS                                                     -->
+<!-- ============================================================ -->
+<script>
+const STORES = [
+  {name:'Albert Park', last:14179, avg12:16294, spark:[17212,15900,15754,17256,14616,13830,17697,16526,11678,20446,20438,14179]},
+  {name:'South Kingsville', last:14684, avg12:20158, spark:[21226,19540,24278,27903,19382,14368,20100,23805,16566,20864,19182,14684]},
+  {name:'Werribee', last:12161, avg12:12861, spark:[12639,10039,12448,11774,13647,12062,12924,14571,9727,15053,17298,12162]},
+  {name:'Butler', last:10140, avg12:11940, spark:[11296,11938,12224,14373,10463,10857,12805,13991,10420,11625,13149,10140]},
+  {name:'Route', last:11152, avg12:9429, spark:[11038,9683,9903,8573,10198,8840,11176,9400,7812,5376,10000,11152]},
+  {name:'Seddon', last:4552, avg12:5531, spark:[5130,5585,5459,6469,4932,4576,5180,4608,5723,6897,7261,4553]},
+];
+const GROUP_TREND = [{week:'08 Feb',sales:78541},{week:'15 Feb',sales:72684},{week:'22 Feb',sales:80066},{week:'01 Mar',sales:86348},{week:'08 Mar',sales:73238},{week:'15 Mar',sales:64534},{week:'22 Mar',sales:79883},{week:'29 Mar',sales:82900},{week:'05 Apr',sales:61925},{week:'12 Apr',sales:80261},{week:'19 Apr',sales:87327},{week:'26 Apr',sales:66871}];
+const YEST_SERVICES = [
+  {service:'Dry Cleaning', sales:4434, orders:95, pieces:213},
+  {service:'Shirts', sales:1149, orders:49, pieces:199},
+  {service:'Hotel Staff Uniforms', sales:797, orders:33, pieces:85},
+  {service:'Household', sales:763, orders:13, pieces:16},
+  {service:'Shoe Repairs', sales:359, orders:4, pieces:2},
+  {service:'Repairs', sales:298, orders:12, pieces:19},
+  {service:'Dry Cleaning Route', sales:255, orders:7, pieces:10},
+  {service:'Linen/Wash Fold', sales:210, orders:11, pieces:7},
+];
+const TOP_SERVICES = [
+  {name:'Dry Cleaning', sales:1284475},{name:'Shirts', sales:295919},{name:'Dry Cleaning Route', sales:217213},{name:'Household', sales:186790},{name:'Linen/Wash Fold', sales:182409},{name:'Shirts Route', sales:104122},{name:'Repairs', sales:83430},{name:'Wedding', sales:58009},{name:'Uniforms', sales:56552},{name:'Agency2019', sales:43053},
+];
+
+// Mock customers for the on-demand profile demo
+const CUSTOMERS = [
+  {id:1, name:'Mrs Chen, Karen', store:'Albert Park', since:'Jun 2018', lastVisit:'21 Apr 2026', cadence:14, ltv:4820, lastYr:1840, tier:'VIP',
+    services:[{n:'Dry Cleaning',$:2840},{n:'Shirts',$:1180},{n:'Wedding',$:520},{n:'Repairs',$:280}],
+    notUsed:['Pickup/Delivery','Household','Leather','Linen/Wash Fold'],
+    brands:['Country Road','Maticevski','Camilla','Theory'],
+    pattern:'Weekly; pre-event spikes (wedding May 2024); winter coat clean each May',
+    suggested:'High LTV, never tried delivery. Offer free pickup trial. Maticevski customer — premium tolerance.'},
+  {id:2, name:'Mr Patel, Raj', store:'Werribee', since:'Mar 2021', lastVisit:'29 Apr 2026', cadence:21, ltv:2640, lastYr:1180, tier:'Regular',
+    services:[{n:'Shirts',$:1820},{n:'Dry Cleaning',$:680},{n:'Repairs',$:140}],
+    notUsed:['Household','Wedding','Linen/Wash Fold','Pickup/Delivery'],
+    brands:['Hugo Boss','Charles Tyrwhitt','Rodd & Gunn'],
+    pattern:'Fortnightly (work shirts); occasional weekend dry cleaning',
+    suggested:'Heavy shirt customer. Promote shirts subscription / pickup-delivery.'},
+  {id:3, name:'Ms Wong, Jen', store:'South Kingsville', since:'Sep 2023', lastVisit:'18 Apr 2026', cadence:30, ltv:1240, lastYr:840, tier:'Regular',
+    services:[{n:'Dry Cleaning',$:780},{n:'Household',$:340},{n:'Shoe Repairs',$:120}],
+    notUsed:['Wedding','Leather','Linen/Wash Fold','Curtains'],
+    brands:['Aje','Scanlan Theodore','Veronika Maine'],
+    pattern:'Monthly; Q4 spike (Christmas + summer events)',
+    suggested:'Premium-brand customer. Push curtains seasonal special.'},
+  {id:4, name:'Mr Wilson, Tom', store:'Werribee', since:'Jan 2022', lastVisit:'22 Dec 2025', cadence:42, ltv:3440, lastYr:0, tier:'Lapsed',
+    services:[{n:'Dry Cleaning',$:1840},{n:'Shirts',$:920},{n:'Household',$:480},{n:'Repairs',$:200}],
+    notUsed:['Pickup/Delivery','Wedding','Leather'],
+    brands:['Politix','M.J. Bale','Sportscraft'],
+    pattern:'Monthly historically; lapsed since 22 Dec 2025',
+    suggested:'132 days lapsed. High LTV. Send win-back: 20% off + reminder of pickup/delivery launch.'},
+];
+
+let activeCustomer = null;
+
+function showSection(id) {
+  document.querySelectorAll('.nav-section').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.sidebar-link:not(.has-sub)').forEach(el => el.classList.remove('active'));
+  document.getElementById('section-' + id).classList.add('active');
+  const link = document.querySelector('.sidebar-link[onclick*="' + id + '"]');
+  if (link) link.classList.add('active');
+  document.getElementById('main').scrollTop = 0;
+  if (id === 'dashboard') drawCharts();
+}
+
+function toggleTenantMenu() {
+  document.getElementById('tenantMenu').classList.toggle('hidden');
+}
+function switchTenant(name, stores) {
+  document.getElementById('tenantName').textContent = name;
+  document.getElementById('tenantMenu').classList.add('hidden');
+  alert('Tenant switched to "' + name + '" (' + stores + ' stores). In production, the entire workspace re-renders with their data, branding, stores, customers, campaigns. Multi-tenant architecture isolates each operator.');
+}
+
+function fmtDollar(v) { return '$' + v.toLocaleString('en-AU'); }
+function fmtPct(v) { return (v >= 0 ? '+' : '') + v.toFixed(1) + '%'; }
+
+function renderStoreLeaderboard() {
+  const tbody = document.getElementById('storeLeaderboard');
+  tbody.innerHTML = STORES.map(s => {
+    const pct = ((s.last - s.avg12) / s.avg12) * 100;
+    const cls = pct >= 5 ? 'text-green-600' : pct <= -5 ? 'text-red-600' : 'text-gray-500';
+    return '<tr><td><strong>' + s.name + '</strong></td><td>' + fmtDollar(s.last) + '</td><td>' + fmtDollar(s.avg12) + '</td><td class="' + cls + '">' + fmtPct(pct) + '</td></tr>';
+  }).join('');
+}
+
+function renderYestServices() {
+  const tbody = document.getElementById('yestServices');
+  tbody.innerHTML = YEST_SERVICES.map(s => '<tr><td>' + s.service + '</td><td>' + fmtDollar(s.sales) + '</td><td>' + s.orders + '</td><td>' + s.pieces + '</td><td>$' + (s.sales/s.pieces).toFixed(0) + '</td></tr>').join('');
+}
+
+function renderTopServices() {
+  const tbody = document.getElementById('topServices12mo');
+  const max = TOP_SERVICES[0].sales;
+  tbody.innerHTML = TOP_SERVICES.map(s => {
+    const pct = (s.sales/max*100).toFixed(0);
+    return '<tr><td><div>' + s.name + '</div><div style="height:4px;background:rgba(255,255,255,0.06);border-radius:2px;margin-top:4px;overflow:hidden;"><div style="height:100%;width:' + pct + '%;background:linear-gradient(90deg,#06B6D4,#22D3EE);border-radius:2px;"></div></div></td><td>' + fmtDollar(s.sales) + '</td></tr>';
+  }).join('');
+}
+
+let groupChart = null;
+function drawCharts() {
+  if (groupChart) { groupChart.destroy(); }
+  const ctx = document.getElementById('groupTrendChart');
+  if (!ctx) return;
+  groupChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: GROUP_TREND.map(d => d.week),
+      datasets: [{
+        label: 'Group weekly sales',
+        data: GROUP_TREND.map(d => d.sales),
+        borderColor: '#06B6D4',
+        backgroundColor: function(context) {
+          const chart = context.chart;
+          const {ctx, chartArea} = chart;
+          if (!chartArea) return 'rgba(6,182,212,0.1)';
+          const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+          gradient.addColorStop(0, 'rgba(6,182,212,0.25)');
+          gradient.addColorStop(1, 'rgba(6,182,212,0)');
+          return gradient;
+        },
+        borderWidth: 2.5,
+        tension: 0.35,
+        fill: true,
+        pointRadius: 4,
+        pointBackgroundColor: '#22D3EE',
+        pointBorderColor: '#0A0E1A',
+        pointBorderWidth: 2,
+        pointHoverRadius: 6,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1B2030',
+          titleColor: '#F1F5F9',
+          bodyColor: '#94A3B8',
+          borderColor: 'rgba(255,255,255,0.12)',
+          borderWidth: 1,
+          padding: 12,
+          callbacks: { label: function(ctx){ return '$' + ctx.parsed.y.toLocaleString('en-AU'); } }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: false,
+          ticks: { color: '#64748B', callback: function(v){ return '$' + (v/1000).toFixed(0) + 'k'; } },
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          border: { display: false }
+        },
+        x: {
+          ticks: { color: '#64748B' },
+          grid: { display: false },
+          border: { color: 'rgba(255,255,255,0.08)' }
+        }
+      }
+    }
+  });
+}
+
+function renderCustomerList() {
+  const list = document.getElementById('customerList');
+  list.innerHTML = CUSTOMERS.map((c, i) => {
+    const tierClass = c.tier === 'VIP' ? 'pill-vip' : c.tier === 'Regular' ? 'pill-regular' : c.tier === 'Lapsed' ? 'pill-lapsed' : 'pill-casual';
+    return '<div class="p-3 border-b border-gray-200 cursor-pointer hover:bg-blue-50" onclick="showCustomer(' + i + ')"><div class="flex justify-between"><strong class="text-sm">' + c.name + '</strong><span class="pill ' + tierClass + '">' + c.tier + '</span></div><div class="text-xs text-gray-500 mt-1">' + c.store + ' · LTV ' + fmtDollar(c.ltv) + '</div></div>';
+  }).join('');
+}
+
+function showCustomer(i) {
+  const c = CUSTOMERS[i];
+  activeCustomer = c;
+  const tierClass = c.tier === 'VIP' ? 'pill-vip' : c.tier === 'Regular' ? 'pill-regular' : c.tier === 'Lapsed' ? 'pill-lapsed' : 'pill-casual';
+  const body = document.getElementById('customerDetailBody');
+  body.innerHTML = `
+    <div class="flex justify-between items-start mb-4">
+      <div>
+        <h3 class="text-lg font-semibold">${c.name}</h3>
+        <div class="text-xs text-gray-500">Customer since ${c.since} · Primary store: ${c.store}</div>
+      </div>
+      <span class="pill ${tierClass}">${c.tier}</span>
+    </div>
+    <div class="grid grid-cols-4 gap-3 mb-5">
+      <div class="kpi-card"><div class="kpi-label">Lifetime spend</div><div class="kpi-value">${fmtDollar(c.ltv)}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Last 12 mo</div><div class="kpi-value">${fmtDollar(c.lastYr)}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Cadence</div><div class="kpi-value">${c.cadence}d</div></div>
+      <div class="kpi-card"><div class="kpi-label">Last visit</div><div class="kpi-value text-base">${c.lastVisit}</div></div>
+    </div>
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <h4 class="font-semibold text-sm mb-2">Services used</h4>
+        <table class="text-sm w-full"><tbody>${c.services.map(s => `<tr><td class="py-1">${s.n}</td><td class="py-1 text-right text-gray-600">${fmtDollar(s.$)}</td></tr>`).join('')}</tbody></table>
+      </div>
+      <div>
+        <h4 class="font-semibold text-sm mb-2">🔍 Services NOT used — opportunities</h4>
+        ${c.notUsed.map(s => '<div class="opportunity">' + s + '</div>').join('')}
+      </div>
+    </div>
+    <div class="grid grid-cols-2 gap-4 mt-5">
+      <div>
+        <h4 class="font-semibold text-sm mb-2">Brands worn (AI-extracted)</h4>
+        <div>${c.brands.map(b => '<span class="pill pill-regular mr-2 mb-1 inline-block">' + b + '</span>').join('')}</div>
+      </div>
+      <div>
+        <h4 class="font-semibold text-sm mb-2">Visit pattern</h4>
+        <p class="text-sm text-gray-600">${c.pattern}</p>
+      </div>
+    </div>
+    <div class="mt-5 p-4 rounded-lg" style="background: linear-gradient(135deg, rgba(245,158,11,0.12), rgba(139,92,246,0.10)); border: 1px solid rgba(245,158,11,0.3);">
+      <div class="text-xs uppercase font-semibold" style="color: var(--amber-bright); letter-spacing: 1px;">💡 AI-suggested next action</div>
+      <div class="text-sm mt-1" style="color: var(--text);">${c.suggested}</div>
+      <div class="mt-3 flex gap-2">
+        <button class="px-3 py-1.5 bg-blue-600 text-white rounded text-xs">Send SMS now</button>
+        <button class="px-3 py-1.5 border border-gray-300 rounded text-xs">Add to next campaign</button>
+      </div>
+    </div>
+  `;
+}
+
+function filterCustomers() {
+  const q = document.getElementById('customerSearch').value.toLowerCase();
+  const filtered = CUSTOMERS.filter(c => c.name.toLowerCase().includes(q) || c.store.toLowerCase().includes(q));
+  const list = document.getElementById('customerList');
+  list.innerHTML = filtered.map((c) => {
+    const i = CUSTOMERS.indexOf(c);
+    const tierClass = c.tier === 'VIP' ? 'pill-vip' : c.tier === 'Regular' ? 'pill-regular' : c.tier === 'Lapsed' ? 'pill-lapsed' : 'pill-casual';
+    return '<div class="p-3 border-b border-gray-200 cursor-pointer hover:bg-blue-50" onclick="showCustomer(' + i + ')"><div class="flex justify-between"><strong class="text-sm">' + c.name + '</strong><span class="pill ' + tierClass + '">' + c.tier + '</span></div><div class="text-xs text-gray-500 mt-1">' + c.store + ' · LTV ' + fmtDollar(c.ltv) + '</div></div>';
+  }).join('');
+}
+
+// Init
+renderStoreLeaderboard();
+renderYestServices();
+renderTopServices();
+renderCustomerList();
+setTimeout(drawCharts, 100);
+
+// Click outside to close tenant menu
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('tenantMenu');
+  if (!e.target.closest('.relative') && !menu.classList.contains('hidden')) {
+    menu.classList.add('hidden');
+  }
+});
+</script>
+</body>
+</html>
